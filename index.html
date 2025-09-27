@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Stamp Diary</title>
+  <link rel="icon" href="https://mikatea.sakura.ne.jp/Adeline/auth/favicon.ico" type="image/x-icon">
+  <link href="https://fonts.googleapis.com/css2?family=M+PLUS+1p:wght@400;700&family=Yomogi&display=swap" rel="stylesheet" />
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'M+PLUS 1p', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      color: #333;
+      line-height: 1.6;
+    }
+
+    header {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      padding: 1rem;
+      text-align: center;
+      box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    header h1 {
+      color: #4a5568;
+      font-size: 1.8rem;
+      font-weight: 700;
+    }
+
+    main {
+      max-width: 1200px;
+      margin: 2rem auto;
+      padding: 0 1rem;
+    }
+
+    .calendar-container {
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 16px;
+      padding: 2rem;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+      backdrop-filter: blur(10px);
+    }
+
+    #calendar {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    #calendar th {
+      background: #4a5568;
+      color: white;
+      padding: 1rem;
+      font-weight: 600;
+      text-align: center;
+    }
+
+    #calendar td {
+      border: 1px solid #e2e8f0;
+      vertical-align: top;
+      height: 120px;
+      position: relative;
+      background: #fafafa;
+      transition: background-color 0.2s ease;
+    }
+
+    #calendar td:hover {
+      background: #f0f4f8;
+    }
+
+    .month-title {
+      text-align: center;
+      font-weight: 700;
+      font-size: 1.2rem;
+      padding: 1rem;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+    }
+
+    .cell {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      padding: 0.5rem;
+    }
+
+    .date {
+      position: absolute;
+      top: 4px;
+      left: 6px;
+      font-size: 0.75rem;
+      color: #718096;
+      font-weight: 600;
+    }
+
+    .slot {
+      width: 45%;
+      height: 45%;
+      position: absolute;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      cursor: pointer;
+      border-radius: 6px;
+      transition: all 0.2s ease;
+      background: rgba(255, 255, 255, 0.8);
+      border: 1px dashed #cbd5e0;
+    }
+
+    .slot:hover {
+      background: rgba(102, 126, 234, 0.15);
+      border-color: #667eea;
+      transform: scale(1.05);
+    }
+
+    .slot.tr { 
+      top: 8px; 
+      right: 8px;
+      border-top: 2px solid #e2e8f0;
+      border-right: 2px solid #e2e8f0;
+    }
+    
+    .slot.bl { 
+      bottom: 8px; 
+      left: 8px;
+      border-bottom: 2px solid #e2e8f0;
+      border-left: 2px solid #e2e8f0;
+    }
+    
+    .slot.br { 
+      bottom: 8px; 
+      right: 8px;
+      border-bottom: 2px solid #e2e8f0;
+      border-right: 2px solid #e2e8f0;
+    }
+
+    #stampPalette {
+      position: fixed;
+      z-index: 1000;
+      display: none;
+      padding: 1rem;
+      border: 1px solid #e2e8f0;
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.98);
+      backdrop-filter: blur(10px);
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+      max-width: 90vw;
+      max-height: 70vh;
+      overflow-y: auto;
+    }
+
+    #stampPalette .close-btn {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: 700;
+      color: #e53e3e;
+      cursor: pointer;
+      padding: 0.5rem;
+      border-radius: 6px;
+      transition: background-color 0.2s ease;
+    }
+
+    #stampPalette .close-btn:hover {
+      background: rgba(229, 62, 62, 0.1);
+    }
+
+    #stampPalette .section-title {
+      font-weight: 600;
+      color: #2d3748;
+      margin: 1rem 0 0.5rem 0;
+      font-size: 0.9rem;
+    }
+
+    #stampPalette .emoji {
+      cursor: pointer;
+      font-size: 1.2rem;
+      margin: 2px;
+      padding: 0.25rem;
+      border-radius: 4px;
+      transition: background-color 0.2s ease;
+    }
+
+    #stampPalette .emoji:hover {
+      background: rgba(102, 126, 234, 0.1);
+    }
+
+    #stampPalette hr {
+      margin: 0.75rem 0;
+      border: none;
+      height: 1px;
+      background: linear-gradient(to right, transparent, #cbd5e0, transparent);
+    }
+
+    .controls {
+      text-align: center;
+      margin: 2rem 0;
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+      border: none;
+      padding: 0.75rem 1.5rem;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+    }
+
+    .loading {
+      text-align: center;
+      color: #718096;
+      font-size: 1.1rem;
+      padding: 2rem;
+    }
+
+    .error {
+      background: rgba(254, 226, 226, 0.9);
+      color: #c53030;
+      padding: 1rem;
+      border-radius: 8px;
+      margin: 1rem 0;
+      text-align: center;
+    }
+
+    @media (max-width: 768px) {
+      main {
+        padding: 0 0.5rem;
+      }
+      
+      .calendar-container {
+        padding: 1rem;
+        border-radius: 12px;
+      }
+      
+      #calendar th,
+      #calendar td {
+        height: 80px;
+        font-size: 0.85rem;
+      }
+      
+      .slot {
+        font-size: 1.2rem;
+      }
+      
+      header h1 {
+        font-size: 1.4rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>📅 Stamp Diary</h1>
+  </header>
+
+  <main>
+    <div class="calendar-container">
+      <div id="loadingIndicator" class="loading">カレンダーを読み込み中...</div>
+      <div id="errorMessage" class="error" style="display: none;"></div>
+      
+      <table id="calendar" aria-label="calendar" style="display: none;">
+        <thead>
+          <tr>
+            <th>日</th><th>月</th><th>火</th><th>水</th><th>木</th><th>金</th><th>土</th>
+          </tr>
+        </thead>
+        <tbody id="calendarBody"></tbody>
+      </table>
+    </div>
+  </main>
+
+  <div id="stampPalette" role="dialog" aria-modal="true"></div>
+
+  <footer class="controls">
+    <button id="prevMonth" class="btn">← 前月</button>
+    <button id="toThisMonth" class="btn">今月に戻る</button>
+    <button id="nextMonth" class="btn">翌月 →</button>
+  </footer>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-app.js";
+    import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-firestore.js";
+    import { getAuth, onAuthStateChanged, signInAnonymously, signOut } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-auth.js";
+
+    // Firebase設定
+    const firebaseConfig = {
+        apiKey: "",
+        authDomain: "",
+        projectId: "",
+        storageBucket: "",
+        messagingSenderId: "",
+        appId: "",
+        measurementId: ""
+    };
+
+    class DiaryApp {
+      constructor() {
+        this.app = initializeApp(firebaseConfig);
+        this.db = getFirestore(this.app);
+        this.auth = getAuth(this.app);
+        this.currentUser = null;
+        this.today = new Date();
+        this.loadYear = this.today.getFullYear();
+        this.loadMonth = this.today.getMonth();
+        this.targetSlot = null;
+        this.idleTimer = null;
+        this.IDLE_TIMEOUT = 1000 * 60 * 10; // 10分
+        
+        this.stampSections = [
+          {
+            title: "感情",
+            emojis: ["😀","😭","😡","😍","🤔","😴","🤯","🥳","😅","🤗","🤩","😱","🤤","🥺","🥶","🥵"]
+          },
+          {
+            title: "学習・仕事",
+            emojis: ["📚","📖","📝","💻","💯","💤","🖊","📊","📡","📰","🌐","🔬","🔭","⚛️","🔢","➗","🧮","🧪","🎓"]
+          },
+          {
+            title: "ヘルスケア",
+            emojis: ["💊","🏥","🚭","🥗","🚶‍♀️","🏃‍♂️","🛌","🤒","🤧","🤕","🧘","💪","🩺"]
+          },
+          {
+            title: "家事・生活",
+            emojis: ["🗑","🧺","🧹","🛒","🍳","🧽","💸","📦","🪴","🚪","🛠","🧯"]
+          },
+          {
+            title: "余暇",
+            emojis: ["🎬","🎮","🎵","📷","🛝","🎨","🎤","✈️"]
+          },
+          {
+            title: "食事",
+            emojis: ["🍛","🍣","🍕","🍔","🍩","🍜","🥟","🫖"]
+          }
+        ];
+
+        this.init();
+      }
+
+      async init() {
+        try {
+          this.setupEventListeners();
+          this.buildPalette();
+          this.setupIdleDetection();
+          
+          // 認証状態の監視
+          onAuthStateChanged(this.auth, this.handleAuthStateChange.bind(this));
+        } catch (error) {
+          this.showError('アプリケーションの初期化に失敗しました: ' + error.message);
+        }
+      }
+
+      async handleAuthStateChange(user) {
+        try {
+          if (!user) {
+            await signInAnonymously(this.auth);
+            return;
+          }
+          
+          this.currentUser = user;
+          await this.renderCalendar(this.today.getFullYear(), this.today.getMonth());
+          this.hideLoading();
+        } catch (error) {
+          this.showError('認証エラー: ' + error.message);
+        }
+      }
+
+      setupEventListeners() {
+        // 今月に戻るボタン
+        document.getElementById("toThisMonth").addEventListener("click", () => {
+          this.resetToCurrentMonth();
+        });
+
+        // 前月・翌月ナビゲーション
+        document.getElementById("prevMonth").addEventListener("click", () => {
+          this.navigateMonth(-1);
+        });
+
+        document.getElementById("nextMonth").addEventListener("click", () => {
+          this.navigateMonth(1);
+        });
+
+        // パレット外クリックで閉じる
+        document.addEventListener("click", (e) => {
+          const palette = document.getElementById("stampPalette");
+          if (palette.style.display === "block" && !palette.contains(e.target)) {
+            this.hidePalette();
+          }
+        });
+      }
+
+      setupIdleDetection() {
+        const resetTimer = () => {
+          clearTimeout(this.idleTimer);
+          this.idleTimer = setTimeout(async () => {
+            try {
+              await signOut(this.auth);
+              alert("10分間操作がなかったため自動ログアウトされました。");
+              location.href = "../auth/auth.html";
+            } catch (error) {
+              console.error("ログアウトエラー:", error);
+            }
+          }, this.IDLE_TIMEOUT);
+        };
+
+        ["mousemove", "keydown", "click", "scroll"].forEach(evt => {
+          document.addEventListener(evt, resetTimer, false);
+        });
+
+        resetTimer();
+      }
+
+      ymdId(year, month, day, position) {
+        const mm = String(month + 1).padStart(2, "0");
+        const dd = String(day).padStart(2, "0");
+        return `${year}-${mm}-${dd}_${position}`;
+      }
+
+      monthTitle(year, month) {
+        return `${year}年${month + 1}月`;
+      }
+
+      buildPalette() {
+        const palette = document.getElementById("stampPalette");
+        palette.innerHTML = "";
+
+        const closeBtn = document.createElement("span");
+        closeBtn.className = "close-btn";
+        closeBtn.textContent = "× スタンプ削除/閉じる";
+        closeBtn.addEventListener("click", async () => {
+          if (this.targetSlot && this.targetSlot.textContent.trim()) {
+            // スタンプが押されている場合は削除
+            const id = this.targetSlot.dataset.id;
+            this.targetSlot.textContent = "";
+            await this.saveStamp(id, "");
+          }
+          this.hidePalette();
+        });
+        palette.appendChild(closeBtn);
+        
+        palette.appendChild(document.createElement("hr"));
+
+        this.stampSections.forEach(section => {
+          const titleDiv = document.createElement("div");
+          titleDiv.className = "section-title";
+          titleDiv.textContent = section.title;
+          palette.appendChild(titleDiv);
+
+          section.emojis.forEach(emoji => {
+            const span = document.createElement("span");
+            span.className = "emoji";
+            span.textContent = emoji;
+            span.addEventListener("click", async () => {
+              await this.selectStamp(emoji);
+            });
+            palette.appendChild(span);
+          });
+
+          palette.appendChild(document.createElement("hr"));
+        });
+      }
+
+      async selectStamp(emoji) {
+        if (!this.targetSlot) return;
+        
+        try {
+          const id = this.targetSlot.dataset.id;
+          this.targetSlot.textContent = emoji;
+          await this.saveStamp(id, emoji);
+          this.hidePalette();
+        } catch (error) {
+          this.showError('スタンプの保存に失敗しました: ' + error.message);
+        }
+      }
+
+      showPalette(x, y, slotElement) {
+        this.targetSlot = slotElement;
+        const palette = document.getElementById("stampPalette");
+        
+        // 画面外に出ないよう位置調整
+        const maxX = window.innerWidth - palette.offsetWidth - 20;
+        const maxY = window.innerHeight - palette.offsetHeight - 20;
+        
+        palette.style.left = Math.min(x, maxX) + "px";
+        palette.style.top = Math.min(y, maxY) + "px";
+        palette.style.display = "block";
+      }
+
+      hidePalette() {
+        document.getElementById("stampPalette").style.display = "none";
+        this.targetSlot = null;
+      }
+
+      async loadStamp(id) {
+        if (!this.currentUser) return "";
+        
+        try {
+          const ref = doc(this.db, "users", this.currentUser.uid, "stamps", id);
+          const snap = await getDoc(ref);
+          return snap.exists() ? (snap.data().emoji || "") : "";
+        } catch (error) {
+          console.error("スタンプ読み込みエラー:", error);
+          return "";
+        }
+      }
+
+      async saveStamp(id, emoji) {
+        if (!this.currentUser) {
+          throw new Error("ユーザーが認証されていません");
+        }
+        
+        try {
+          const ref = doc(this.db, "users", this.currentUser.uid, "stamps", id);
+          await setDoc(ref, { 
+            emoji, 
+            updatedAt: new Date(),
+            userId: this.currentUser.uid,
+            stampId: id
+          }, { merge: true }); // mergeオプションで既存データを保持
+          
+          console.log(`スタンプ保存成功: ${id} -> ${emoji}`);
+        } catch (error) {
+          console.error("スタンプ保存エラー:", error);
+          throw new Error("スタンプの保存に失敗しました: " + error.message);
+        }
+      }
+
+      async renderCalendar(year, month) {
+        const tbody = document.getElementById("calendarBody");
+        
+        // 月タイトル行
+        const titleTr = document.createElement("tr");
+        const th = document.createElement("th");
+        th.colSpan = 7;
+        th.className = "month-title";
+        th.textContent = this.monthTitle(year, month);
+        titleTr.appendChild(th);
+        tbody.appendChild(titleTr);
+
+        const firstDay = new Date(year, month, 1);
+        const lastDay = new Date(year, month + 1, 0).getDate();
+        let weekday = firstDay.getDay();
+        let tr = document.createElement("tr");
+
+        // 月初の空セル
+        for (let i = 0; i < weekday; i++) {
+          tr.appendChild(document.createElement("td"));
+        }
+
+        // 日付セル
+        for (let day = 1; day <= lastDay; day++) {
+          if (weekday === 7) {
+            tbody.appendChild(tr);
+            tr = document.createElement("tr");
+            weekday = 0;
+          }
+
+          const td = document.createElement("td");
+          const cell = this.createDayCell(year, month, day);
+          td.appendChild(cell);
+          tr.appendChild(td);
+          weekday++;
+        }
+
+        // 月末の空セル
+        if (weekday > 0) {
+          for (let i = weekday; i < 7; i++) {
+            tr.appendChild(document.createElement("td"));
+          }
+          tbody.appendChild(tr);
+        }
+
+        // スタンプ復元
+        await this.loadStampsForMonth(year, month, lastDay);
+      }
+
+      createDayCell(year, month, day) {
+        const cell = document.createElement("div");
+        cell.className = "cell";
+
+        const dateDiv = document.createElement("div");
+        dateDiv.className = "date";
+        dateDiv.textContent = day;
+        cell.appendChild(dateDiv);
+
+        ["tr", "bl", "br"].forEach(position => {
+          const slot = document.createElement("div");
+          slot.className = `slot ${position}`;
+          slot.dataset.id = this.ymdId(year, month, day, position);
+          
+          slot.addEventListener("click", (event) => {
+            event.stopPropagation();
+            const rect = slot.getBoundingClientRect();
+            this.showPalette(
+              rect.left + rect.width / 2,
+              rect.top + window.scrollY + rect.height + 8,
+              slot
+            );
+          });
+          
+          cell.appendChild(slot);
+        });
+
+        return cell;
+      }
+
+      async loadStampsForMonth(year, month, lastDay) {
+        const tbody = document.getElementById("calendarBody");
+        
+        for (let day = 1; day <= lastDay; day++) {
+          for (const position of ["tr", "bl", "br"]) {
+            const id = this.ymdId(year, month, day, position);
+            const slot = tbody.querySelector(`.slot.${position}[data-id="${id}"]`);
+            
+            if (slot) {
+              try {
+                const emoji = await this.loadStamp(id);
+                slot.textContent = emoji;
+              } catch (error) {
+                console.error(`スタンプ読み込みエラー (${id}):`, error);
+              }
+            }
+          }
+        }
+      }
+
+      navigateMonth(direction) {
+        this.loadMonth += direction;
+        if (this.loadMonth > 11) {
+          this.loadMonth = 0;
+          this.loadYear++;
+        } else if (this.loadMonth < 0) {
+          this.loadMonth = 11;
+          this.loadYear--;
+        }
+        
+        // カレンダーを完全に再描画
+        document.getElementById("calendarBody").innerHTML = "";
+        this.renderCalendar(this.loadYear, this.loadMonth);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+
+      resetToCurrentMonth() {
+        document.getElementById("calendarBody").innerHTML = "";
+        this.loadYear = this.today.getFullYear();
+        this.loadMonth = this.today.getMonth();
+        this.renderCalendar(this.loadYear, this.loadMonth);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+
+      showError(message) {
+        const errorElement = document.getElementById("errorMessage");
+        errorElement.textContent = message;
+        errorElement.style.display = "block";
+        this.hideLoading();
+      }
+
+      hideLoading() {
+        document.getElementById("loadingIndicator").style.display = "none";
+        document.getElementById("calendar").style.display = "table";
+      }
+    }
+
+    // アプリケーション開始
+    new DiaryApp();
+  </script>
+</body>
+</html>
